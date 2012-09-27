@@ -16,7 +16,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <P STYLE="margin-bottom: 0in">Hello,</P>
-<P STYLE="margin-bottom: 0in">	Here is some extensions for
+<P STYLE="margin-bottom: 0in">	Here are some extensions for
 Qsanguosha(An open source online version of the famous board game
 Sanguosha) written by Lua.</P>
 <P STYLE="margin-bottom: 0in">	Most of the codes are written by me,
