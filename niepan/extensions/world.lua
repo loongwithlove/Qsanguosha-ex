@@ -1,1 +1,0 @@
-/home/charles/Games/sgs/devel/extensions/world.lua
