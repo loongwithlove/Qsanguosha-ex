@@ -46,10 +46,13 @@ god = sgs.CreateTriggerSkill
 CL:addSkill(god)
 
 sgs.LoadTranslationTable{
-	["#CL"] = "近神的男人",
+	["#CL"] = "包作者",
 	["$paoxiao2"] = "风劲角弓鸣，将军猎渭城",
 	["$paoxiao3"] = "草枯鹰眼疾，雪尽马蹄轻",
 	["$paoxiao4"] = "回看射雕处，千里暮云平",
+	["designer:CL"] = "CL",
+	["cv:CL"] = "暂无",
+	["illustrator:CL"] = "暂无",
 }
 	
 --真＊袁术
@@ -128,7 +131,6 @@ steal_card = sgs.CreateSkillCard
 		local card_id = room:askForCardChosen(from, to, "h", "steal")
 		local card = sgs.Sanguosha:getCard(card_id)
 		room:moveCardTo(card, from, sgs.Player_Hand, false)
-		room:playSkillEffect("paoxiao",2)
 		if to:getHandcardNum() < 1 then from:drawCards(2) return true end
 		if to:getHandcardNum() > 0 then
 		local card_id = room:askForCardChosen(from, to, "h", "steal")
@@ -181,7 +183,6 @@ sgs.LoadTranslationTable{
 	[":steal"] = "摸牌阶段，你可从另一名角色手里抽2张牌，若该角色手牌只有1张，你将摸两张牌。",
 	["~steal"] = "摸牌阶段，你可从另一名角色手里抽2张牌，若该角色手牌只有1张，你将摸两张牌。",
 	["@steal_card"] = "侠探",
-	["$paoxiao2"] = "咦，你的手牌呢？";
 	["designer:luxiaofeng"] = "CL",
 	["cv:luxiaofeng"] = "暂无",
 }
@@ -407,7 +408,6 @@ wuzhao = sgs.CreateTriggerSkill
     for var = 1, x, 1 do
       if e == 0 then return false end
       local card_id = room:askForCardChosen(damage.from, damage.to, "hej", "wuzhao")
-      room:playSkillEffect("fankui",1)
       room:moveCardTo(sgs.Sanguosha:getCard(card_id), damage.from, sgs.Player_Hand, false)
     end
 end
@@ -473,6 +473,7 @@ if not sgs.Sanguosha:getSkill("jiujian") then skills:append(jiujian) end
 
 sgs.LoadTranslationTable{ 
 	["duguqiubai"]="独孤求败",
+	["#duguqiubai"] = "剑魔",
 	["wuzhao"]="无招",
 	[":wuzhao"]="当你即将造成X点伤害时，你可获得伤害目标X张牌",
 	["wujian"] = "悟剑",
@@ -482,6 +483,247 @@ sgs.LoadTranslationTable{
 	[":jiujian"]="摸牌阶段，你可多摸X张牌，X＝(4-你装备数目)/2＋1。",
 	["designer:duguqiubai"] = "CL",
 	["cv:duguqiubai"] = "暂无",
-	["#duguqiubai"] = "剑魔",
 	["illustrator:duguqiubai"] = "暂无",
+}
+
+-- 星矢
+xingshi = sgs.General(extension,"xingshi","shu",4)
+
+liuxing=sgs.CreateTriggerSkill
+{--流星 “星矢的天马流星拳太威武了，CL启示我们是因为星矢领悟了第七感”CL的信徒这样说到
+name="liuxing",
+events={sgs.CardUsed},
+frequency = sgs.Skill_NotFrequent,
+
+on_trigger=function(self,event,player,data)
+	local room=player:getRoom()	
+	local selfplayer=room:findPlayerBySkillName(self:objectName())
+	local otherplayers=room:getOtherPlayers(selfplayer)
+	
+	if event==sgs.CardUsed then
+		local use=data:toCardUse()
+		if not use.from:hasSkill(self:objectName()) then return false end
+		if use.card==nil then return false end
+		if not use.card:inherits("Slash") then return false end
+		if selfplayer:hasFlag("liuxing_tmp") then return false end
+		if (room:askForSkillInvoke(selfplayer,self:objectName(),data)~=true) then return false end
+		local pfc=room:getOtherPlayers(selfplayer)
+		local pfc_t=room:getOtherPlayers(selfplayer)
+		for _,p in sgs.qlist(pfc_t) do
+			if not selfplayer:canSlash(p) then pfc:removeOne(p) end				
+		end
+		for _,target in sgs.qlist(use.to) do
+			local b=false
+			for _,p in sgs.qlist(pfc) do
+				if target:objectName()==p:objectName() then b=true end				
+			end		
+		end
+		local pc=room:askForPlayerChosen(selfplayer,pfc,self:objectName())
+		if pc==nil then return false end
+		use.to:append(pc)
+		room:setPlayerFlag(selfplayer,"liuxing_tmp")
+		room:useCard(use)
+		room:setPlayerFlag(selfplayer,"-liuxing_tmp")
+		return true
+	end	
+end,
+can_trigger=function(self, player)
+	local room=player:getRoom()
+	local selfplayer=room:findPlayerBySkillName(self:objectName())
+	if selfplayer==nil then return false end
+	return selfplayer:isAlive()
+end
+}
+
+xingshi:addSkill(liuxing)
+
+sgs.LoadTranslationTable{
+	["xingshi"] = "星矢",
+	["#xingshi"] = "天马座",
+	[":xingshi"] = "沙织小姐，我...",
+	["liuxing"] = "流星",
+	[":liuxing"] = "你的每张【杀】可以同时对攻击距离内的两名角色使用，或者对同一角色使用两次。",
+	["designer:xingshi"] = "CL",
+	["cv:xingshi"] = "暂无",
+	["illustrator:xingshi"] = "暂无",
+}
+	
+-- 真＊张辽
+true_zhangliao = sgs.General(extension,"true_zhangliao","wei",4)
+
+truetuxi_card = sgs.CreateSkillCard
+{--真＊突袭 技能卡
+	name = "truetuxi",	
+	target_fixed = false,	
+	will_throw = false,
+	
+	filter = function(self, targets, to_select)
+		if(#targets > 1) then return false end
+		
+		if(to_select == self) then return false end
+		
+		return not to_select:isKongcheng()
+	end,
+		
+	on_effect = function(self, effect)
+		local from = effect.from
+		local to = effect.to
+		local room = to:getRoom()
+		local card_id = room:askForCardChosen(from, to, "h", "truetuxi_main")
+		local card = sgs.Sanguosha:getCard(card_id)
+		room:moveCardTo(card, from, sgs.Player_Hand, false)
+		from:gainMark("truetuxi_count",1)
+
+		room:setEmotion(to, "bad")
+		room:setEmotion(from, "good")
+	end,
+}
+
+truetuxi_viewas = sgs.CreateViewAsSkill
+{--真＊突袭 视为技
+	name = "truetuxi_viewas",	
+	n = 0,
+	
+	view_as = function()
+		return truetuxi_card:clone()		
+	end,
+	
+	enabled_at_play = function()
+		return false
+	end,
+	
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@@truetuxi_main"
+	end
+}
+
+truetuxi_main = sgs.CreateTriggerSkill
+{--真＊突袭 主技能 触发技
+	name = "truetuxi_main",
+	view_as_skill = truetuxi_viewas,
+	events = {sgs.PhaseChange},
+	
+	on_trigger = function(self, event, player, data)
+		if(player:getPhase() == sgs.Player_Draw) then
+			local room = player:getRoom()
+			local can_invoke = false
+			local other = room:getOtherPlayers(player)
+			for _,aplayer in sgs.qlist(other) do
+				if(not aplayer:isKongcheng()) then
+					can_invoke = true
+					break
+				end
+			end
+			if(not room:askForSkillInvoke(player, "truetuxi_main")) then return false end
+			if(can_invoke and room:askForUseCard(player, "@@truetuxi_main", "@truetuxi_card")) then return true end 
+		return false end
+		
+		if (player:getPhase() == sgs.Player_Play) then
+			if ( player:getMark("truetuxi_count") == 1 ) then player:drawCards(1) end
+			local room = player:getRoom()
+			room:setPlayerMark(player,"truetuxi_count",0)
+		end
+	end
+
+}
+
+true_zhangliao:addSkill(truetuxi_main)
+
+sgs.LoadTranslationTable{
+	["true_zhangliao"] = "真＊张辽",
+	["#true_zhangliao"] = "前将军",
+	["truetuxi_main"] = "真＊突袭",
+	[":truetuxi_main"] = "摸牌阶段开始时，你可以放弃摸牌，改为获得一至两名角色的各一张手牌；若你只选择了一名角色，你将摸一张牌。",
+	["@truetuxi_card"] = "您是否发动技能［真＊突袭］？",
+	["~truetuxi_main"] = "选择 1-2 名角色——点击确定按钮。",
+	["designer:true_zhangliao"] = "CL",
+	["cv:true_zhangliao"] = "暂无",
+	["illustrator:true_zhangliao"] = "暂无",
+}
+
+-- 拿破仑·波拿巴
+-- CL：拿破仑的技能源自于我原来love扩展包的曹洪，感觉还是拿破仑适合这个技能一点，也是希望更加世界化。
+-- 拿破仑统军有方，奈何滑铁卢一役在援军不确定的情况下率骑兵队突进，伤敌一万却也自损八千。
+-- 称号：世之怪杰 源自周总理对拿破仑的评论。
+	
+napoleon = sgs.General(extension,"napoleon","wei",4)
+
+luatongshuai=sgs.CreateTriggerSkill
+{
+	name="luatongshuai",
+	events={sgs.CardResponsed,sgs.CardUsed},
+	frequency = sgs.Skill_Frequent,
+
+	on_trigger=function(self,event,player,data)
+	local room=player:getRoom()	
+	local selfplayer=room:findPlayerBySkillName(self:objectName())
+	if not player:hasSkill("luatongshuai") then return false end
+	local otherplayers=room:getOtherPlayers(selfplayer)
+	if event==sgs.CardResponsed then
+		local cd=data:toCard()
+		if cd:inherits("BasicCard") then
+			local room = player:getRoom()
+			if not player:isAlive() then return false end
+			if not room:askForSkillInvoke(player, "luatongshuai") then return false end
+			room:playSkillEffect("luatongshuai", 1)
+			player:drawCards(1)
+			end
+	end
+	if event == sgs.CardUsed then
+		local room = player:getRoom()
+		local card = data:toCardUse().card
+		if card:inherits("BasicCard") then 
+			if not room:askForSkillInvoke(player, "luatongshuai") then return false end
+			room:playSkillEffect("luatongshuai", 1)
+			player:drawCards(1)
+		end
+	end
+	end,
+
+	can_trigger=function(self, player)
+	local room=player:getRoom()
+	local selfplayer=room:findPlayerBySkillName(self:objectName())
+	if selfplayer==nil then return false end
+	return selfplayer:isAlive()
+	end,
+}
+
+
+luamaojin = sgs.CreateTriggerSkill
+{
+	name = "luamaojin",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.DamageForseen},
+
+	on_trigger = function(self,event,player,data)
+		if not player:hasSkill("luamaojin") then return false end
+		local damage = data:toDamage()
+		local room = player:getRoom()
+		local reason = damage.card
+		if ( reason:inherits("Duel") ) or ( ( reason:inherits("Slash") )and ( reason:isRed() ) ) then
+			damage.damage = damage.damage + 1
+			data:setValue(damage)
+			local log = sgs.LogMessage()
+			log.type = "#luamaojin";
+			log.from = player;
+			log.arg = self:objectName();
+			room:sendLog(log);
+		end
+		end,	
+}
+		
+napoleon:addSkill(luatongshuai)
+napoleon:addSkill(luamaojin)
+
+sgs.LoadTranslationTable{
+	["napoleon"] = "拿破仑·波拿巴",
+	["#napoleon"] = "世之怪杰",
+	["luatongshuai"] = "统帅",
+	[":luatongshuai"] = "任何时候，每当你打出、使用一张基本牌，你可摸一张牌。",
+	["luamaojin"] = "冒进",
+	[":luamaojin"] = "锁定技，每当你受到红杀和决斗伤害时，该伤害加1。",
+	["#luamaojin"] = "由于%from冒进无援，此伤害将加1。",
+	["designer:napoleon"] = "CL",
+	["cv:napoleon"] = "暂无",
+	["illustrator:napoleon"] = "暂无",
 }
